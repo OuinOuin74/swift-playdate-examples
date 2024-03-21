@@ -13,26 +13,8 @@ endif
 
 include $(SDK)/C_API/buildsupport/common.mk
 
-# Determine the Swift toolchain by order of preference:
-#
-# 1. the presence of a TOOLCHAINS environment value
-# 2. a Swift toolchain installed for the current user (e.g. 'Install for me only')
-# 3. a Swift toolchain installed for all users (e.g. 'Install for all users on this computer')
-RELATIVE_TOOLCHAIN_PATH = Library/Developer/Toolchains/swift-latest.xctoolchain
-ifneq ($(TOOLCHAINS),)
-else ifneq ($(wildcard $(HOME)/$(RELATIVE_TOOLCHAIN_PATH)),)
-TOOLCHAINS = $(shell plutil -extract CFBundleIdentifier raw -o - $(HOME)/$(RELATIVE_TOOLCHAIN_PATH)/Info.plist)
-else ifneq ($(wildcard /$(RELATIVE_TOOLCHAIN_PATH)),)
-TOOLCHAINS = $(shell plutil -extract CFBundleIdentifier raw -o - /$(RELATIVE_TOOLCHAIN_PATH)/Info.plist)
-else
-$(error Swift toolchain not found; set ENV value TOOLCHAINS (e.g. TOOLCHAINS=org.swift.59202403121a make))
-endif
-
 GCC_INCLUDE_PATHS := $(shell $(CC) -E -Wp,-v -xc /dev/null 2>&1 | egrep '^ ' | xargs echo )
-SWIFT_EXEC := "$(shell TOOLCHAINS=$(TOOLCHAINS) xcrun -f swiftc)"
-TOOLCHAIN_PATH := $(shell echo $(SWIFT_EXEC)|sed s'/.xctoolchain.*/.xctoolchain/')
-
-$(info Using Swift toolchain "$(TOOLCHAINS)" (from $(TOOLCHAIN_PATH)))
+SWIFT_EXEC := $(SDK)/Swift/toolchain/usr/bin/swiftc
 
 C_FLAGS := \
 	$(addprefix -I ,$(GCC_INCLUDE_PATHS)) \
@@ -74,5 +56,5 @@ SWIFT_FLAGS_SIMULATOR := \
 SIMCOMPILER += \
 	-nostdlib \
 	-dead_strip \
-	-Wl,-exported_symbol,_eventHandlerShim \
-	-Wl,-exported_symbol,_eventHandler \
+#	-Wl,-exported_symbol,_eventHandlerShim \
+#	-Wl,-exported_symbol,_eventHandler \
